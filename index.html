@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMRL Document Automation</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .hero-bg {
+            background-color: #1a237e;
+            background-image: radial-gradient(#283593, #1a237e);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-8px) rotate(2deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .postcard {
+            position: relative;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: 2px solid #1565c0;
+            transform: perspective(1000px) rotateY(0deg) scale(1);
+            transition: transform 0.5s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .postcard:hover {
+            transform: perspective(1000px) rotateY(15deg) scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .page-content {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            z-index: 10;
+        }
+        .page-content.active {
+            display: flex;
+            animation: slideIn 0.5s forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Main Container -->
+    <div id="main-content" class="min-h-screen">
+
+        <!-- Hero Section -->
+        <section class="hero-bg text-white py-20 md:py-32 text-center transition-all duration-500">
+            <div class="container mx-auto px-4 animate-fade-in">
+                <h1 class="text-4xl md:text-6xl font-extrabold mb-4 text-shadow leading-tight">MetaVault - An Automated Document Management for Kochi Metro Rail Limited</h1>
+                <h2 class="text-xl md:text-2xl font-light mb-8 text-shadow">Transforming Information Overload into Operational Excellence</h2>
+                <a href="#challenge" class="bg-white text-orange-600 font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 transform">Learn More</a>
+            </div>
+        </section>
+        
+        <!-- Document Upload Section (Updated Layout) -->
+        <section id="upload-section" class="bg-gray-200 py-16 md:py-24">
+            <div class="container mx-auto px-4 text-center">
+                <h3 class="text-4xl font-bold mb-2 text-blue-800">Your Document Repository</h3>
+                <p class="text-lg text-gray-600 max-w-xl mx-auto mb-10">Get an instant overview of your document library and start managing new files.</p>
+                
+                <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+                    <!-- Total Documents Card -->
+                    <div class="w-full md:w-1/3 bg-white p-12 rounded-2xl shadow-xl transition-transform duration-300 transform hover:scale-105">
+                        <div class="flex flex-col items-center">
+                            <span id="uploaded-count" class="text-6xl font-extrabold text-blue-600">0</span>
+                            <p class="mt-4 text-xl font-semibold text-gray-800">Total Documents</p>
+                            <p class="text-sm text-gray-500 mt-2">The total number of documents uploaded across all sessions.</p>
+                        </div>
+                    </div>
+
+                    <!-- Upload Document Card -->
+                    <div id="upload-card" onclick="showPage('upload-page')" class="w-full md:w-1/3 bg-white p-12 rounded-2xl shadow-xl border-2 border-dashed border-gray-300 hover:border-blue-500 transition-all duration-300 cursor-pointer transform hover:scale-105">
+                        <div class="flex flex-col items-center">
+                            <div class="text-6xl text-orange-400">📂</div>
+                            <p class="mt-4 text-xl font-semibold text-gray-800">Upload a Document</p>
+                            <p class="text-sm text-gray-500 mt-2">Start the intelligent summarization and routing process.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Postcards Section -->
+        <section id="postcards" class="bg-gray-100 py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4 text-blue-800">Our Core Applications</h3>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">Explore the different ways our system can transform your workflow.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    <div id="summarise-card" onclick="showPage('summarise-page')" class="postcard p-8 rounded-2xl cursor-pointer text-center">
+                        <div class="text-7xl mb-4">📄</div>
+                        <h4 class="text-2xl font-bold text-gray-900 mb-2">Summarise</h4>
+                        <p class="text-gray-700">Get a quick, concise summary of any document. Upload a file to see how it works.</p>
+                    </div>
+                    <div id="route-card-postcard" onclick="showPage('route-page')" class="postcard p-8 rounded-2xl cursor-pointer text-center">
+                        <div class="text-7xl mb-4">🗺️</div>
+                        <h4 class="text-2xl font-bold text-gray-900 mb-2">Routing & Workflow</h4>
+                        <p class="text-gray-700">Route documents to the right teams and individuals automatically.</p>
+                    </div>
+                    <div id="archive-card" onclick="showPage('archive-page')" class="postcard p-8 rounded-2xl cursor-pointer text-center">
+                        <div class="text-7xl mb-4">🏛️</div>
+                        <h4 class="text-2xl font-bold text-gray-900 mb-2">Intelligent Archive</h4>
+                        <p class="text-gray-700">Find any document instantly with powerful search and indexing.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- The Challenge Section -->
+        <section id="challenge" class="bg-white py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4 text-blue-800">The Challenge of Document Overload</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Cards for key issues -->
+                    <div class="card bg-orange-50 p-6 rounded-xl shadow-md border-2 border-orange-200">
+                        <div class="text-4xl mb-4">⏱️</div>
+                        <h4 class="text-xl font-semibold mb-2 text-orange-800">Information Latency</h4>
+                        <p class="text-gray-600">Manual review and distribution of documents create significant delays. An engineer needing a safety protocol might wait hours or days for it to be routed, impacting timely problem-solving and reactive maintenance.</p>
+                    </div>
+                    <div class="card bg-cyan-50 p-6 rounded-xl shadow-md border-2 border-cyan-200">
+                        <div class="text-4xl mb-4">👥</div>
+                        <h4 class="text-xl font-semibold mb-2 text-cyan-800">Siloed Awareness</h4>
+                        <p class="text-gray-600">Key insights from one department often don't reach others. A financial report on new equipment costs, for example, might not be seen by the engineering department, leading to uninformed decisions and missed opportunities for collaboration.</p>
+                    </div>
+                    <div class="card bg-red-100 p-6 rounded-xl shadow-md border-2 border-red-300">
+                        <div class="text-4xl mb-4">🚨</div>
+                        <h4 class="text-xl font-semibold mb-2 text-red-800">Compliance Exposure</h4>
+                        <p class="text-gray-600">Without a centralized, automated system, tracking and verifying compliance documents is a time-consuming and error-prone task. This manual process can expose KMRL to regulatory risks, penalties, and operational failures if crucial checks are missed.</p>
+                    </div>
+                    <div class="card bg-lime-50 p-6 rounded-xl shadow-md border-2 border-lime-200">
+                        <div class="text-4xl mb-4">🧠</div>
+                        <h4 class="text-xl font-semibold mb-2 text-lime-800">Knowledge Attrition</h4>
+                        <p class="text-gray-600">Valuable institutional knowledge, often embedded in internal memos, reports, and manuals, can be lost as employees retire or move to new roles. Finding this information later is a major challenge, leading to duplicated efforts and a loss of historical context.</p>
+                    </div>
+                    <div class="card bg-yellow-50 p-6 rounded-xl shadow-md border-2 border-yellow-200">
+                        <div class="text-4xl mb-4">♻️</div>
+                        <h4 class="text-xl font-semibold mb-2 text-yellow-800">Duplicated Effort</h4>
+                        <p class="text-gray-600">Teams spend time recreating information that already exists but is difficult to find. For example, a department might write a new report on a recurring issue because the original, archived report could not be located in the manual filing system, wasting valuable resources.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Solution Section -->
+        <section id="solution" class="bg-gray-200 py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4 text-blue-800">Our Intelligent Solution</h3>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">Our intelligent document automation system uses advanced algorithms to process, understand, and manage documents, turning them from a burden into a powerful asset for KMRL.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Solution cards -->
+                    <div class="card bg-blue-50 p-6 rounded-xl shadow-md border-2 border-blue-200 text-center">
+                        <div class="text-4xl mb-4">📝</div>
+                        <h4 class="text-xl font-semibold text-blue-800">Condense</h4>
+                        <p class="text-gray-600">Summarize long documents to capture key information instantly.</p>
+                    </div>
+                    <div id="contextualize-card" onclick="showPage('contextualize-page')" class="card bg-fuchsia-50 p-6 rounded-xl shadow-md border-2 border-fuchsia-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">🎯</div>
+                        <h4 class="text-xl font-semibold text-fuchsia-800">Contextualize</h4>
+                        <p class="text-gray-600">Tailor information and reports for specific stakeholder needs.</p>
+                    </div>
+                    <div id="route-card" onclick="showPage('route-page')" class="card bg-sky-50 p-6 rounded-xl shadow-md border-2 border-sky-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">➡️</div>
+                        <h4 class="text-xl font-semibold text-sky-800">Route</h4>
+                        <p class="text-gray-600">Automatically send documents to the relevant teams and individuals.</p>
+                    </div>
+                    <div id="alert-card" class="card bg-rose-50 p-6 rounded-xl shadow-md border-2 border-rose-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">🔔</div>
+                        <h4 class="text-xl font-semibold text-rose-800">Alerts</h4>
+                        <p class="text-gray-600">Automatically notify relevant personnel about critical events in real-time.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Expected Outcomes Section -->
+        <section id="outcomes" class="bg-white py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold mb-4 text-blue-800">A Future of Efficiency and Reliability</h3>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">By implementing our intelligent system, KMRL can unlock a new era of operational excellence, ensuring the metro service remains a benchmark of efficiency.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Outcome cards -->
+                    <div class="card bg-green-50 p-6 rounded-xl shadow-md border-2 border-green-200 text-center">
+                        <div class="text-4xl mb-4">🚀</div>
+                        <h4 class="text-xl font-semibold mb-2 text-green-800">Faster Decisions</h4>
+                        <p class="text-gray-600">Access to real-time, relevant information accelerates crucial decision-making processes.</p>
+                    </div>
+                    <div id="better-coordination-card" onclick="showPage('better-coordination-page')" class="card bg-orange-50 p-6 rounded-xl shadow-md border-2 border-orange-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">🤝</div>
+                        <h4 class="text-xl font-semibold mb-2 text-orange-800">Better Coordination</h4>
+                        <p class="text-gray-600">Siloed information is broken down, fostering seamless collaboration across teams.</p>
+                    </div>
+                    <div id="improved-compliance-card" onclick="showPage('improved-compliance-page')" class="card bg-purple-50 p-6 rounded-xl shadow-md border-2 border-purple-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">✅</div>
+                        <h4 class="text-xl font-semibold mb-2 text-purple-800">Improved Compliance</h4>
+                        <p class="text-gray-600">A robust and traceable system ensures adherence to all regulatory standards.</p>
+                    </div>
+                    <div id="knowledge-preservation-card" onclick="showPage('knowledge-preservation-page')" class="card bg-sky-50 p-6 rounded-xl shadow-md border-2 border-sky-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">📚</div>
+                        <h4 class="text-xl font-semibold mb-2 text-sky-800">Knowledge Preservation</h4>
+                        <p class="text-gray-600">Institutional knowledge is captured and made accessible for future use.</p>
+                    </div>
+                    <div id="increased-efficiency-card" onclick="showPage('increased-efficiency-page')" class="card bg-fuchsia-50 p-6 rounded-xl shadow-md border-2 border-fuchsia-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">📈</div>
+                        <h4 class="text-xl font-semibold mb-2 text-fuchsia-800">Increased Efficiency</h4>
+                        <p class="text-gray-600">Automated processes reduce manual labor and free up time for core tasks.</p>
+                    </div>
+                    <div id="safer-metro-card" onclick="showPage('safer-metro-page')" class="card bg-indigo-50 p-6 rounded-xl shadow-md border-2 border-indigo-200 text-center cursor-pointer">
+                        <div class="text-4xl mb-4">🛡️</div>
+                        <h4 class="text-xl font-semibold mb-2 text-indigo-800">Reliable & Safer Metro Services</h4>
+                        <p class="text-gray-600">With better data, KMRL can ensure a safer and more reliable experience for all.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 text-white text-center py-6">
+            <div class="container mx-auto px-4">
+                <p>&copy; 2024 Kochi Metro Rail Limited. All rights reserved.</p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Upload Page -->
+    <div id="upload-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-2xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-blue-800">Your Document Repository</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <p class="text-lg text-gray-600 max-w-xl mx-auto mb-10 text-center">Click on the card below to select a document from your computer.</p>
+
+            <!-- Upload Document Card -->
+            <label for="document-upload" class="w-full block bg-gray-50 p-12 rounded-2xl shadow-xl border-2 border-dashed border-gray-300 hover:border-blue-500 transition-all duration-300 cursor-pointer text-center relative">
+                <div class="flex flex-col items-center pointer-events-none">
+                    <div class="text-6xl text-orange-400">📂</div>
+                    <p class="mt-4 text-xl font-semibold text-gray-800">Click to Browse</p>
+                    <p class="text-sm text-gray-500 mt-2">PDF, DOCX, TXT and more...</p>
+                </div>
+                <input id="document-upload" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileUpload(event)" />
+            </label>
+        </div>
+    </div>
+
+
+    <!-- New Summarization Page -->
+    <div id="summarise-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-2xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-blue-800">Document Summarization</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <p class="text-lg text-gray-600 max-w-xl mx-auto mb-10 text-center">Upload a document below to get an instant summary of its key points.</p>
+
+            <!-- Summarization Upload Card -->
+            <label for="summarize-upload" class="w-full block bg-gray-50 p-12 rounded-2xl shadow-xl border-2 border-dashed border-gray-300 hover:border-blue-500 transition-all duration-300 cursor-pointer text-center relative">
+                <div class="flex flex-col items-center pointer-events-none">
+                    <div class="text-6xl text-blue-400">📄</div>
+                    <p class="mt-4 text-xl font-semibold text-gray-800">Select a Document</p>
+                    <p class="text-sm text-gray-500 mt-2">PDF, DOCX, TXT and more...</p>
+                </div>
+                <input id="summarize-upload" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleSummarizeUpload(event)" />
+            </label>
+
+            <!-- Summary Output -->
+            <div id="summarize-output" class="w-full max-w-2xl mx-auto mt-12 p-8 bg-gray-50 rounded-lg border border-gray-200 shadow-inner">
+                <h4 class="text-xl font-bold text-gray-800 mb-4">Generated Summary</h4>
+                <p id="summary-text" class="text-gray-600 italic">Upload a document to see the generated summary here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Contextualize Page -->
+    <div id="contextualize-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-2xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-fuchsia-800">Contextualize Reports</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="text-center p-8 bg-fuchsia-50 rounded-lg">
+                <p class="text-gray-700">This feature allows the system to generate custom reports and documents tailored to specific audiences. For example, a single incident report can be automatically re-formatted to highlight safety concerns for the operations team, or financial impacts for the finance department, ensuring everyone gets the information they need in a clear and relevant format.</p>
+                <div class="mt-6 flex justify-center space-x-4">
+                    <span class="text-xl">Safety Reports 📝</span>
+                    <span class="text-xl">Financial Summaries 💰</span>
+                    <span class="text-xl">Operational Briefings 📋</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New Route Page -->
+    <div id="route-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-sky-800">Automated Document Routing</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="text-lg text-gray-600 mb-8 text-center">Documents are intelligently routed to the right teams and individuals based on their content and predefined workflows. This table shows a log of recent routing events.</p>
+
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Document</th>
+                            <th scope="col" class="py-3 px-6">Relevant Teams & Individuals</th>
+                            <th scope="col" class="py-3 px-6">Routing Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Q4 Financial Report</td>
+                            <td class="py-4 px-6 text-gray-700">Finance, Leadership</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-25 09:30 AM</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Annual Safety Audit Findings</td>
+                            <td class="py-4 px-6 text-gray-700">Engineering, Safety, Operations</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-24 02:45 PM</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">New Employee Onboarding Policy</td>
+                            <td class="py-4 px-6 text-gray-700">HR, Finance</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-23 11:15 AM</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Maintenance Schedule Update</td>
+                            <td class="py-4 px-6 text-gray-700">Operations, Engineering</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-22 04:00 PM</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Contract with Vendor XYZ</td>
+                            <td class="py-4 px-6 text-gray-700">Legal, Procurement, Finance</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-21 09:00 AM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intelligent Archive Page -->
+    <div id="archive-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-gray-800">Intelligent Archive</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-lg text-gray-600 mb-8 text-center">Our intelligent archive system ensures that any piece of information can be retrieved in seconds, preventing knowledge attrition and facilitating audits.</p>
+            
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Document Title</th>
+                            <th scope="col" class="py-3 px-6">Date Archived</th>
+                            <th scope="col" class="py-3 px-6">Tags & Keywords</th>
+                            <th scope="col" class="py-3 px-6">Author</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Annual Safety Report - 2023</td>
+                            <td class="py-4 px-6 text-gray-700">2024-01-15</td>
+                            <td class="py-4 px-6 text-gray-700">Safety, Audit, Compliance, Operations</td>
+                            <td class="py-4 px-6 text-gray-700">John Doe</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Q3 Financial Performance Review</td>
+                            <td class="py-4 px-6 text-gray-700">2023-10-30</td>
+                            <td class="py-4 px-6 text-gray-700">Finance, Budget, Performance, Report</td>
+                            <td class="py-4 px-6 text-gray-700">Jane Smith</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Metro Line 1 Expansion Feasibility Study</td>
+                            <td class="py-4 px-6 text-gray-700">2022-05-12</td>
+                            <td class="py-4 px-6 text-gray-700">Expansion, Planning, Engineering, Feasibility</td>
+                            <td class="py-4 px-6 text-gray-700">KMRL Planning Team</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">HR Policy Update - Leave & Attendance</td>
+                            <td class="py-4 px-6 text-gray-700">2023-08-01</td>
+                            <td class="py-4 px-6 text-gray-700">HR, Policy, Employee, Handbook</td>
+                            <td class="py-4 px-6 text-gray-700">HR Department</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Vendor Contract: Train Parts & Spares</td>
+                            <td class="py-4 px-6 text-gray-700">2021-09-20</td>
+                            <td class="py-4 px-6 text-gray-700">Procurement, Contract, Vendor, Maintenance</td>
+                            <td class="py-4 px-6 text-gray-700">Procurement Team</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-8 text-center">
+                <button onclick="goBack()" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300">Back to Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- New Alerts Page -->
+    <div id="alert-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-rose-800">Alerts & Notifications</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Notification Bell and Filter -->
+            <div class="flex items-center justify-between mb-8 p-4 bg-gray-100 rounded-xl shadow-inner">
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-rose-600" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C11.135 2 10.292 2.193 9.49 2.569C8.687 2.946 7.942 3.498 7.285 4.195C6.628 4.892 6.077 5.729 5.701 6.64C5.326 7.551 5.132 8.527 5.132 9.51C5.132 10.493 5.326 11.469 5.701 12.38C6.077 13.291 6.628 14.128 7.285 14.825C7.942 15.522 8.687 16.074 9.49 16.451C10.292 16.828 11.135 17.021 12 17.021C12.865 17.021 13.708 16.828 14.51 16.451C15.313 16.074 16.058 15.522 16.715 14.825C17.372 14.128 17.923 13.291 18.299 12.38C18.674 11.469 18.868 10.493 18.868 9.51C18.868 8.527 18.674 7.551 18.299 6.64C17.923 5.729 17.372 4.892 16.715 4.195C16.058 3.498 15.313 2.946 14.51 2.569C13.708 2.193 12.865 2 12 2Z"/>
+                        <path d="M12 22C12.552 22 13 21.552 13 21H11C11 21.552 11.448 22 12 22Z" fill="currentColor"/>
+                    </svg>
+                    <span id="alert-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform -translate-x-1/2 -translate-y-1/2">0</span>
+                </div>
+                <div class="flex-grow ml-4">
+                    <p class="text-xl font-bold text-gray-800">New Alerts</p>
+                    <p class="text-sm text-gray-500">Stay up-to-date with critical information.</p>
+                </div>
+                <div class="relative">
+                    <label for="department-filter" class="sr-only">Filter by Department</label>
+                    <select id="department-filter" onchange="filterAlerts(this.value)" class="block w-full px-4 py-2 pr-8 rounded-full border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-semibold text-gray-700">
+                        <option value="All">All Departments</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="HR">HR</option>
+                        <option value="Compliance">Compliance</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Alerts Panels -->
+            <div id="alerts-container">
+                <!-- Alerts will be dynamically added here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Custom Modal for Alert -->
+    <div id="custom-alert-modal" class="modal">
+        <div class="modal-content text-center">
+            <h4 class="text-xl font-bold mb-4 text-red-600">Attention</h4>
+            <p id="custom-alert-message" class="mb-4"></p>
+            <button onclick="closeCustomAlert()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-300">OK</button>
+        </div>
+    </div>
+    
+    <!-- New Page: Better Coordination -->
+    <div id="better-coordination-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-orange-800">Better Coordination</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-lg text-gray-600 mb-8 text-center">Our system ensures information is shared seamlessly across teams, preventing knowledge silos and fostering effective collaboration.</p>
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Document Shared</th>
+                            <th scope="col" class="py-3 px-6">From Department</th>
+                            <th scope="col" class="py-3 px-6">To Department(s)</th>
+                            <th scope="col" class="py-3 px-6">Date of Sharing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Annual Safety Report</td>
+                            <td class="py-4 px-6 text-gray-700">Operations</td>
+                            <td class="py-4 px-6 text-gray-700">Engineering, Maintenance</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-25</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Q2 Financial Forecast</td>
+                            <td class="py-4 px-6 text-gray-700">Finance</td>
+                            <td class="py-4 px-6 text-gray-700">Leadership, Procurement</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-24</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">New Vendor Assessment</td>
+                            <td class="py-4 px-6 text-gray-700">Procurement</td>
+                            <td class="py-4 px-6 text-gray-700">Finance, Legal</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-23</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Page: Improved Compliance -->
+    <div id="improved-compliance-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-purple-800">Improved Compliance</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-lg text-gray-600 mb-8 text-center">Automated tracking and verification of compliance documents ensure KMRL meets all regulatory standards with a traceable audit trail.</p>
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Document Type</th>
+                            <th scope="col" class="py-3 px-6">Compliance Check Status</th>
+                            <th scope="col" class="py-3 px-6">Last Verified</th>
+                            <th scope="col" class="py-3 px-6">Next Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Annual Fire Safety Certificate</td>
+                            <td class="py-4 px-6 text-green-600 font-semibold">Passed</td>
+                            <td class="py-4 px-6 text-gray-700">2024-09-01</td>
+                            <td class="py-4 px-6 text-gray-700">2025-09-01</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Environmental Impact Report</td>
+                            <td class="py-4 px-6 text-green-600 font-semibold">Passed</td>
+                            <td class="py-4 px-6 text-gray-700">2024-05-15</td>
+                            <td class="py-4 px-6 text-gray-700">2025-05-15</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Supplier Code of Conduct Audit</td>
+                            <td class="py-4 px-6 text-red-600 font-semibold">Pending</td>
+                            <td class="py-4 px-6 text-gray-700">N/A</td>
+                            <td class="py-4 px-6 text-gray-700">2024-11-30</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Page: Knowledge Preservation -->
+    <div id="knowledge-preservation-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-sky-800">Knowledge Preservation</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-lg text-gray-600 mb-8 text-center">Our system captures valuable institutional knowledge, making it accessible to all, even as employees change roles or retire.</p>
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Topic</th>
+                            <th scope="col" class="py-3 px-6">Document Title</th>
+                            <th scope="col" class="py-3 px-6">Knowledge Contributor</th>
+                            <th scope="col" class="py-3 px-6">Date Captured</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Signal System Troubleshooting</td>
+                            <td class="py-4 px-6 text-gray-700">Signal System Incident Report Q1-2023</td>
+                            <td class="py-4 px-6 text-gray-700">Priya Sharma, Lead Engineer</td>
+                            <td class="py-4 px-6 text-gray-700">2023-04-10</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Asset Maintenance Best Practices</td>
+                            <td class="py-4 px-6 text-gray-700">Advanced Maintenance Handbook</td>
+                            <td class="py-4 px-6 text-gray-700">Retired Engineer B. Singh</td>
+                            <td class="py-4 px-6 text-gray-700">2022-12-20</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Customer Service Incident Resolution</td>
+                            <td class="py-4 px-6 text-gray-700">Ticket Resolution Protocol V2.1</td>
+                            <td class="py-4 px-6 text-gray-700">Customer Relations Team</td>
+                            <td class="py-4 px-6 text-gray-700">2024-08-05</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Page: Increased Efficiency -->
+    <div id="increased-efficiency-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-fuchsia-800">Increased Efficiency</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-lg text-gray-600 mb-8 text-center">Automated processes have streamlined workflows, reducing manual labor and freeing up valuable time for strategic tasks.</p>
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Automated Task</th>
+                            <th scope="col" class="py-3 px-6">Manual Time Saved (per task)</th>
+                            <th scope="col" class="py-3 px-6">Department</th>
+                            <th scope="col" class="py-3 px-6">Implementation Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Invoice Processing & Archiving</td>
+                            <td class="py-4 px-6 text-gray-700">~15 minutes</td>
+                            <td class="py-4 px-6 text-gray-700">Finance</td>
+                            <td class="py-4 px-6 text-gray-700">2024-09-01</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Safety Report Generation & Distribution</td>
+                            <td class="py-4 px-6 text-gray-700">~1 hour</td>
+                            <td class="py-4 px-6 text-gray-700">Safety & Operations</td>
+                            <td class="py-4 px-6 text-gray-700">2024-08-20</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">HR Onboarding Document Routing</td>
+                            <td class="py-4 px-6 text-gray-700">~20 minutes</td>
+                            <td class="py-4 px-6 text-gray-700">HR</td>
+                            <td class="py-4 px-6 text-gray-700">2024-07-15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New Page: Reliable & Safer Metro Services -->
+    <div id="safer-metro-page" class="page-content flex-col items-center justify-start py-10 px-4">
+        <div class="w-full max-w-4xl bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-indigo-800">Reliable & Safer Metro Services</h3>
+                <button onclick="goBack()" class="text-gray-500 hover:text-gray-800 transition-colors duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-lg text-gray-600 mb-8 text-center">By using real-time, actionable insights from our system, KMRL can proactively manage risks and ensure a safer, more reliable experience for commuters.</p>
+            <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="py-3 px-6">Incident Type</th>
+                            <th scope="col" class="py-3 px-6">Date & Time</th>
+                            <th scope="col" class="py-3 px-6">Resolution Time</th>
+                            <th scope="col" class="py-3 px-6">Associated Documents</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Track Signal Failure (Minor)</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-25 14:30</td>
+                            <td class="py-4 px-6 text-gray-700">10 minutes</td>
+                            <td class="py-4 px-6 text-gray-700">Maintenance Manual (S-21), Alert Log (#45)</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Onboard CCTV System Malfunction</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-24 10:15</td>
+                            <td class="py-4 px-6 text-gray-700">18 minutes</td>
+                            <td class="py-4 px-6 text-gray-700">Technical Report (TR-30), Supplier Manual (V-14)</td>
+                        </tr>
+                        <tr class="bg-white border-b hover:bg-gray-100">
+                            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">Platform Safety Barrier Alert</td>
+                            <td class="py-4 px-6 text-gray-700">2024-10-23 16:00</td>
+                            <td class="py-4 px-6 text-gray-700">5 minutes</td>
+                            <td class="py-4 px-6 text-gray-700">Daily Safety Checklist, Alert Log (#43)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let uploadedDocuments = 0;
+        let alertsData = [
+            { id: 1, message: "Urgent: Project budget deficit of $1.5M detected in Q3 report.", department: "Finance", read: false },
+            { id: 2, message: "Critical safety hazard report submitted for Platform 4.", department: "Engineering", read: false },
+            { id: 3, message: "New employee onboarding policy update.", department: "HR", read: false },
+            { id: 4, message: "Final compliance audit report from regulator received. Action required.", department: "Compliance", read: false },
+            { id: 5, message: "Scheduled maintenance for train control system next week.", department: "Engineering", read: true },
+            { id: 6, message: "Request for new security protocol documentation for all staff.", department: "HR", read: true },
+        ];
+
+        function showCustomAlert(message) {
+            const modal = document.getElementById('custom-alert-modal');
+            const messageEl = document.getElementById('custom-alert-message');
+            messageEl.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert-modal').style.display = 'none';
+        }
+
+        function showPage(pageId) {
+            const mainContent = document.getElementById('main-content');
+            const page = document.getElementById(pageId);
+            mainContent.classList.add('hidden');
+            page.style.display = 'flex';
+            page.classList.add('active');
+            if (pageId === 'alert-page') {
+                renderAlerts('All');
+            }
+        }
+
+        function goBack() {
+            const mainContent = document.getElementById('main-content');
+            const pages = document.querySelectorAll('.page-content');
+            pages.forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            mainContent.classList.remove('hidden');
+        }
+
+        function updateAlertCount() {
+            const unreadCount = alertsData.filter(alert => !alert.read).length;
+            const alertCountEl = document.getElementById('alert-count');
+            alertCountEl.textContent = unreadCount;
+        }
+
+        function renderAlerts(department) {
+            const alertsContainer = document.getElementById('alerts-container');
+            alertsContainer.innerHTML = '';
+            const filteredAlerts = alertsData.filter(alert => department === 'All' || alert.department === department);
+            
+            if (filteredAlerts.length === 0) {
+                alertsContainer.innerHTML = '<p class="text-center text-gray-500 mt-8">No alerts found for this department.</p>';
+                return;
+            }
+
+            filteredAlerts.forEach(alert => {
+                const alertPanel = document.createElement('div');
+                alertPanel.className = `p-6 rounded-xl shadow-md mb-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${alert.read ? 'bg-gray-200' : 'bg-white'}`;
+                alertPanel.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-gray-800">${alert.department} Alert</h4>
+                            <p class="text-gray-600 mt-1">${alert.message}</p>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 rounded-full ${alert.read ? 'bg-gray-500 text-white' : 'bg-rose-500 text-white'}">${alert.read ? 'Read' : 'New'}</span>
+                    </div>
+                `;
+                alertPanel.onclick = () => {
+                    const alertToUpdate = alertsData.find(a => a.id === alert.id);
+                    if (alertToUpdate && !alertToUpdate.read) {
+                        alertToUpdate.read = true;
+                        updateAlertCount();
+                        renderAlerts(department); // Re-render to update the 'New' status
+                    }
+                };
+                alertsContainer.appendChild(alertPanel);
+            });
+        }
+
+        function filterAlerts(department) {
+            renderAlerts(department);
+        }
+
+        // Event listeners for page navigation
+        document.getElementById('upload-card').addEventListener('click', () => {
+            showPage('upload-page');
+        });
+        document.getElementById('summarise-card').addEventListener('click', () => {
+            showPage('summarise-page');
+        });
+        document.getElementById('contextualize-card').addEventListener('click', () => {
+            showPage('contextualize-page');
+        });
+        document.getElementById('route-card').addEventListener('click', () => {
+            showPage('route-page');
+        });
+        document.getElementById('archive-card').addEventListener('click', () => {
+            showPage('archive-page');
+        });
+        document.getElementById('alert-card').addEventListener('click', () => {
+            showPage('alert-page');
+        });
+        document.getElementById('route-card-postcard').addEventListener('click', () => {
+            showPage('route-page');
+        });
+
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            // Update document count on the main page
+            uploadedDocuments++;
+            document.getElementById('uploaded-count').textContent = uploadedDocuments;
+
+            // Optional: Provide visual feedback on upload page
+            showCustomAlert(`File "${file.name}" uploaded. Total documents: ${uploadedDocuments}`);
+
+            // Clear the input to allow re-uploading the same file
+            event.target.value = '';
+        }
+
+        function handleSummarizeUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const fileName = file.name;
+            const summaryTextEl = document.getElementById('summary-text');
+            summaryTextEl.textContent = "Processing and summarizing your document...";
+            summaryTextEl.classList.add('italic', 'text-gray-500');
+
+            // Simulate a document summarization process
+            setTimeout(() => {
+                const mockSummary = `This is a mock summary for the document "${fileName}". The key points include the successful implementation of the document management system, the expected increase in operational efficiency, and a significant reduction in information latency across all departments. The project is on track to meet all compliance and knowledge preservation goals.`;
+                summaryTextEl.textContent = mockSummary;
+                summaryTextEl.classList.remove('italic', 'text-gray-500');
+            }, 2000); // Wait 2 seconds to simulate processing
+        }
+        
+        // Initial call to set up alert count on page load
+        document.addEventListener('DOMContentLoaded', updateAlertCount);
+    </script>
+</body>
+</html>
